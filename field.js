@@ -275,7 +275,7 @@ var shortestPathAStar = function(grid, start, dest) {
     return path
 }
 
-var gridSize = 12;
+var gridSize = 40;
 var path = false;
 var path2 = false;
 var path3;
