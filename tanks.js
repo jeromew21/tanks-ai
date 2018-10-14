@@ -1,5 +1,5 @@
 class Tank {
-    constructor(color, coords) {
+    constructor(color, coords, label) {
         this.color = color;
         this.rotation = 0;
         this.size = 50;
@@ -8,6 +8,7 @@ class Tank {
         this.speed = 3;
         this.pointQueue = [];
         this.currentMovement = null;
+        this.label = label;
     }
 
     pointOnGrid() {
@@ -45,7 +46,6 @@ class Tank {
             rotationVelo = 0;
             rotationFrames = 0;
         }
-        console.log("angle: " + angle)
         xvelo = destCoords[0] - this.x;
         yvelo = destCoords[1] - this.y;
         movementFrames = Math.sqrt(xvelo*xvelo + yvelo*yvelo)/this.speed;
@@ -102,12 +102,17 @@ class Tank {
         ctx.translate(this.x, this.y);
         ctx.rotate(this.rotation*Math.PI/180);
         ctx.fillRect(-1*(this.size/2), -1*(this.size/2), this.size, this.size);
-        ctx.fillRect(-1*(this.size/2) + 15, -1*(this.size/2) + 15, this.size, this.size/2);   
+        ctx.fillRect(0, -1*(this.size/2)+this.size/4, this.size, this.size/2);
+        ctx.font = "16px sans-serif";
+        ctx.textAlign = "left";
+        ctx.textBaseline = "middle"; 
+        ctx.fillStyle = "black";
+        ctx.fillText("Tank " + this.label, -1*(this.size/2)+this.size/8, 0) 
         ctx.restore();
     }
 }
 
-var aiTank = new Tank("blue", pointToCoords([0, 0]));
+var aiTank = new Tank("blue", pointToCoords([0, 0]), "A");
 aiTank.startOnPath(path);
 
 var update = function() {
