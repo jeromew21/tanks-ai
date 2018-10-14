@@ -4,6 +4,8 @@ var ctx = canvas.getContext("2d");
 var canvasWidth = 900;
 var canvasHeight = 900;
 
+var gridSize = 12;
+
 canvas.height = canvasHeight;
 canvas.width = canvasWidth;
 var canvasLeftOffset = canvas.offsetLeft;
@@ -275,7 +277,6 @@ var shortestPathAStar = function(grid, start, dest) {
     return path
 }
 
-var gridSize = 12;
 var path = false;
 var path2 = false;
 var path3;
@@ -287,15 +288,6 @@ while (path == false || path2 == false) {
     path2 = shortestPathAStar(grid, [0, gridSize-1], [gridSize-1, 0]);
 }
 var cellSize = canvas.width / grid[0].length;
-
-canvas.addEventListener("click", function(e) {
-    var x = e.pageX - canvasLeftOffset;
-    var y = e.pageY - canvasTopOffset;
-    var gridX = Math.floor(x / cellSize);
-    var gridY = Math.floor(y / cellSize);
-    path = shortestPathAStar(grid, [0, 0], [gridX, gridY]);
-    path3 = shortestPathAStar(grid, [0, 0], [gridX, gridY]);
-}, false);
 
 var hoverCoords = null;
 
