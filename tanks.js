@@ -1,3 +1,57 @@
+var bullets = [];
+var bulletSpeed = Math.floor(cellSize/10);
+var bulletRadius = cellSize/10;
+
+class Bullet {
+    constructor(x, y, rotation) {
+        this.color = "gray";
+        this.x = x;
+        this.y = y;
+        this.speed = bulletSpeed;
+        this.rotation = rotation;
+        bullets.push(this);
+        var audio = new Audio('cannon.mp3');
+        audio.play();
+        this.health = 3;
+    }
+
+    update() {
+        if (this.health <= 0) {
+            return
+        }
+        this.x = this.x + Math.cos(this.rotation*Math.PI/180) * this.speed;
+        this.y = this.y + Math.sin(this.rotation*Math.PI/180) * this.speed;   
+        
+        if (terrainCollision(this.x, this.y, bulletRadius, bulletRadius)) {
+            this.y -= Math.sin(this.rotation*Math.PI/180) * this.speed;
+            if (terrainCollision(this.x, this.y, bulletRadius, bulletRadius)) { //We are on a vertical edge, so 180 -
+                this.rotation = 180 - this.rotation;
+            } else {
+                this.rotation = -1 * this.rotation; //Its a horizontal edge
+            }
+            this.y += Math.sin(this.rotation*Math.PI/180) * this.speed;
+            this.health -= 1;
+        }
+
+        this.draw();
+    }
+
+    draw() {
+        ctx.save();
+        ctx.lineWidth = 1;
+        ctx.strokeStyle = "gray";
+        ctx.fillStyle = "gray";
+        ctx.translate(this.x, this.y);
+        ctx.rotate(this.rotation*Math.PI/180 - Math.PI/2);
+        ctx.beginPath();
+        ctx.arc(0, 0, bulletRadius, 0, Math.PI, false);
+        ctx.fill();
+        ctx.stroke();
+        ctx.fillRect(-1*bulletRadius, -2*bulletRadius + 1, bulletRadius*2, bulletRadius*2)
+        ctx.restore();
+    }
+}
+
 class Tank {
     constructor(color, coords, label) {
         this.color = color;
@@ -12,10 +66,12 @@ class Tank {
         this.wantedDestination = null;
         this.label = label;
         this.p = null; //the point straight ahead of the ai tank
+        this.canFire = true;
+        this.fireBulletTimeout = 0;
+        this.health = 100;
     }
 
     pointOnGrid() {
-        var cellSize = canvas.width / grid[0].length;
         return [Math.floor(this.x / cellSize), Math.floor(this.y / cellSize)]
     }
 
@@ -105,8 +161,24 @@ class Tank {
     }
 
     moveForward(steps) {
-        this.x = this.x + steps * Math.cos(this.rotation*Math.PI/180) * this.speed;
-        this.y = this.y + steps * Math.sin(this.rotation*Math.PI/180) * this.speed;
+        var newX = this.x + steps * Math.cos(this.rotation*Math.PI/180) * this.speed,
+            newY = this.y + steps * Math.sin(this.rotation*Math.PI/180) * this.speed;
+        if (!terrainCollision(newX-this.size/2, newY-this.size/2, this.size, this.size)) {
+            this.x = newX;
+            this.y = newY;
+        }
+    }
+
+    fireBullet() {
+        if (this.canFire) {
+            var bullet = new Bullet(this.x, this.y, this.rotation);
+            this.canFire = false;
+            this.fireBulletTimeout = 30; //30 frames
+        }
+    }
+
+    fullPath() {
+        return [this.pointOnGrid(), this.p].concat(this.pointQueue)
     }
 
     aiUpdate() {
@@ -139,7 +211,18 @@ class Tank {
             this.wantedDestination = null;
         }
         
+        this.update();
         //Call draw
+        this.draw();
+    }
+
+    update() {
+        if (!this.canFire) {
+            this.fireBulletTimeout -= 1;
+            if (this.fireBulletTimeout <= 0) {
+                this.canFire = true;
+            }
+        }
         this.draw();
     }
 
@@ -160,9 +243,10 @@ class Tank {
 }
 
 var aiTank = new Tank("#4286f4", pointToCoords([0, 0]), "A");
-aiTank.startOnPath(path);
+var aiTank2 = new Tank("#4286f4", pointToCoords([gridSize-1, 0]), "C");
 
 var playerTank = new Tank("#123456", pointToCoords([gridSize-1, gridSize-1]), "B");
+playerTank.rotation = 180;
 
 canvas.addEventListener("click", function(e) {
     var x = e.pageX - canvasLeftOffset;
@@ -195,21 +279,37 @@ var handleKeys = function() {
     if (keyRegister[83]) {
         playerTank.moveForward(-1);
     }
+    if (keyRegister[81]) {
+        playerTank.fireBullet();
+    }
 }
 
+var updateSecondaryCanvas = function() {
+    
+}
 
 var update = function() {
     window.requestAnimationFrame(update);
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx2.clearRect(0, 0, secondaryCanvas.width, secondaryCanvas.height);
     handleKeys();
     drawGrid(grid, true, hoverCoords);
-    //drawPath(grid, [aiTank.pointOnGrid(), aiTank.p].concat(aiTank.pointQueue), "orange");
+    drawPath(grid, aiTank.fullPath, "orange");
+    drawPath(grid, aiTank2.fullPath, "purple");
+    for (var i = 0; i < bullets.length; i++) {
+        bullets[i].update();
+    }
     aiTank.aiUpdate();
-    playerTank.draw();
+    aiTank2.aiUpdate();
+    playerTank.update();
+    updateSecondaryCanvas();
 }
 
 update();
 
 setInterval(function() {
     aiTank.goToPoint(playerTank.pointOnGrid());
+    aiTank2.goToPoint(playerTank.pointOnGrid());
+    aiTank.fireBullet();
+    aiTank2.fireBullet();
 }, 3000); //every 3 seconds, try to go to player tank

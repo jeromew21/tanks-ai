@@ -9,21 +9,34 @@
                 height: 100%;
                 width: 100%;
                 background-color: rgba(167, 158, 158, 0.541);
+                font-family: sans-serif;
             }
+
             #canvas1 {
                 width: 900px;
                 height: 900px;
                 background-color: brown;
-                display: block;
-                margin-left: auto;
-                margin-right: auto;
+                border: 1px black solid;
+                box-shadow: 10px 10px 5px 0px rgba(0,0,0,0.75);
+            }
+
+            #canvas2 {
+                width: 400px;
+                height: 600px;
+                background-color: rgb(241, 239, 239);
                 border: 1px black solid;
                 box-shadow: 10px 10px 5px 0px rgba(0,0,0,0.75);
             }
         </style>
     </head>
     <body>
-        <canvas id="canvas1"></canvas>
+        <div style="display: flex; justify-content: center;">
+            <div style="padding-right: 1em;">
+                <h1>Tanks</h1>
+                <canvas id="canvas2"></canvas>
+            </div>  
+            <canvas id="canvas1"></canvas>
+        </div>
         <script src="pq.js"></script>
         <script src="field.js"></script>
         <script src="tanks.js"></script>

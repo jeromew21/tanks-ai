@@ -1,6 +1,11 @@
 var canvas = document.getElementById("canvas1");
 var ctx = canvas.getContext("2d");
 
+var secondaryCanvas = document.getElementById("canvas2");
+var ctx2 = secondaryCanvas.getContext("2d");
+secondaryCanvas.height = 600;
+secondaryCanvas.width = 400;
+
 var canvasWidth = 900;
 var canvasHeight = 900;
 
@@ -309,4 +314,22 @@ var pointToCoords = function(point) {
         (point[0] * cellSize) + cellSize/2, 
         (point[1] * cellSize) + cellSize/2
     ]
+}
+
+var terrainCollision = function(x, y, w, h) { //Simple rect collision detection
+    var tx, ty, tw, th;
+    tw = cellSize;
+    th = cellSize;
+    for (var i = 0; i < grid.length; i++) {
+        for (var k = 0; k < grid[i].length; k++) {
+            if (grid[i][k] == 1) {
+                tx = k * cellSize;
+                ty = i * cellSize;
+                if (tx < x + w && x < tx + tw && ty < y + h && y < ty + th) {
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
 }
