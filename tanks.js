@@ -2,8 +2,10 @@ var bullets = [];
 var bulletSpeed = Math.floor(cellSize/10);
 var bulletRadius = cellSize/10;
 
+var tanks = [];
+
 class Bullet {
-    constructor(x, y, rotation) {
+    constructor(x, y, rotation, originTank) {
         this.color = "gray";
         this.x = x;
         this.y = y;
@@ -13,6 +15,7 @@ class Bullet {
         var audio = new Audio('cannon.mp3');
         audio.play();
         this.health = 3;
+        this.originTank = originTank;
     }
 
     update() {
@@ -31,6 +34,13 @@ class Bullet {
             }
             this.y += Math.sin(this.rotation*Math.PI/180) * this.speed;
             this.health -= 1;
+        } else {
+            for (var i = 0; i < tanks.length; i++) {
+                if (tanks[i] != this.originTank && tanks[i].isBulletCollision(this.x, this.y)) {
+                    tanks[i].hitWithBullet(10);
+                    this.health = 0;
+                }
+            }
         }
 
         this.draw();
@@ -69,6 +79,7 @@ class Tank {
         this.canFire = true;
         this.fireBulletTimeout = 0;
         this.health = 100;
+        tanks.push(this);
     }
 
     pointOnGrid() {
@@ -124,6 +135,15 @@ class Tank {
         ]
     }
 
+    isBulletCollision(x, y) {
+        if (x < this.x + this.size/2 && x > this.x - this.size/2) {
+            if (y < this.y + this.size/2 && y > this.y - this.size/2) {
+                return true;
+            }
+        }
+        return false
+    }
+
     startMoving() {
         this.p = this.pointQueue.shift();
         if (this.pointQueue.length < 1) {
@@ -169,9 +189,24 @@ class Tank {
         }
     }
 
+    hitWithBullet(damage) {
+        this.takeDamage(damage);
+    }
+
+    takeDamage(damage) {
+        this.health -= damage;
+        if (this.health < 0) {
+            this.canFire = false;
+            var i = tanks.indexOf(this);
+            if (i > -1) {
+                tanks.splice(i, 1);
+            }
+        }
+    }
+
     fireBullet() {
         if (this.canFire) {
-            var bullet = new Bullet(this.x, this.y, this.rotation);
+            var bullet = new Bullet(this.x, this.y, this.rotation, this);
             this.canFire = false;
             this.fireBulletTimeout = 30; //30 frames
         }
@@ -212,18 +247,18 @@ class Tank {
         }
         
         this.update();
-        //Call draw
-        this.draw();
     }
 
     update() {
-        if (!this.canFire) {
-            this.fireBulletTimeout -= 1;
-            if (this.fireBulletTimeout <= 0) {
-                this.canFire = true;
+        if (this.health >= 0) {
+            if (!this.canFire) {
+                this.fireBulletTimeout -= 1;
+                if (this.fireBulletTimeout <= 0) {
+                    this.canFire = true;
+                }
             }
+            this.draw();
         }
-        this.draw();
     }
 
     draw() {

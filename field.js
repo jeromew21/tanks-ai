@@ -9,7 +9,7 @@ secondaryCanvas.width = 400;
 var canvasWidth = 900;
 var canvasHeight = 900;
 
-var gridSize = 12;
+var gridSize = 11;
 
 canvas.height = canvasHeight;
 canvas.width = canvasWidth;
